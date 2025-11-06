@@ -1,0 +1,33 @@
+MPLAB X + XC8 Settings for PIC18F4550 Practicals
+-----------------------------------------------
+
+Project Properties (right-click project → Properties):
+- Device: PIC18F4550
+- Compiler Toolchain: XC8 (latest v2.x recommended)
+- Hardware Tool: None (build only)
+
+XC8 Global Options:
+- Output format: Intel HEX
+- Optimisation: O1 (default)
+- Linker → Memory Model: Default (oor=default)
+
+Configuration bits:
+- All source files define config words with #pragma config directives.
+- Ensure "Configuration bits set in code" is checked when opening the Config Bits window.
+
+Build Flow:
+1. Clean and Build Project (Ctrl+Shift+F11) to generate `dist/default/production/<project>.hex`.
+2. Use PICLoader to flash the HEX onto the Microembedded kit.
+
+Serial Console (UART practical):
+- Terminal: Tera Term
+- Baud rate: 9600
+- Data bits: 8
+- Parity: None
+- Stop bits: 1
+- Flow control: None
+
+Additional Tips:
+- Leave "Run project" unchecked because PICLoader handles execution.
+- If you add new source files, place them under "Source Files"; header files go in "Header Files".
+- Set project character set to ASCII to match lab firmware expectations.

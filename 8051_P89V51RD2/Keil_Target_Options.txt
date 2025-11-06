@@ -1,0 +1,34 @@
+Keil µVision Target Options for P89V51RD2 Practicals
+----------------------------------------------------
+
+Target tab:
+- Device: NXP P89V51RD2
+- Xtal (MHz): 11.0592
+- Memory Model: Small (default) or Compact if code grows beyond 2 KB
+- Code Rom Size: 64 KB
+- Use On-chip ROM: Enabled
+
+Output tab:
+- Create HEX file: Enabled
+- HEX Format: Intel
+- Browse for output directory as needed
+
+C51 tab:
+- Optimization Level: 8 (balanced)
+- Interleave: 2
+- Misc Controls: leave blank
+
+A51 tab (for assembly experiment):
+- See project default; no additional directives required
+
+Debug tab:
+- Use Simulator
+- Load Application at Startup: Enabled
+- Stop Program Execution with Serial Interrupt: Optional (default off)
+
+Utilities tab:
+- Use Target Driver for Flash Programming: ULINK (default) or leave as is for simulator-only runs
+
+Notes:
+- All 8051 experiments in this repo are demonstrated inside Keil; no external hardware configuration is required.
+- Use the Port, Memory, and Logic Analyzer windows for observation.
