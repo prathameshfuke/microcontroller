@@ -1,111 +1,57 @@
-/******************************************************************************
- * PIC18F4550 UART Serial Communication with PC
- * Experiment Q7: Bi-directional Serial Data Transfer via UART
- *
- * Author: Microcontroller Lab
- * Date: November 6, 2025
- * Target Device: PIC18F4550
- * IDE: MPLAB X IDE
- * Compiler: XC8
- *
- * Description:
- *   This program establishes bi-directional serial communication between
- *   PIC18F4550 and PC using UART. Sends startup message to PC and echoes
- *   back any received data. Can be used to control LEDs or other peripherals
- *   via serial commands.
- *
- * Hardware Configuration:
- *   UART TX: RC6 --> USB-to-Serial RX (CP2102/CH340/FT232)
- *   UART RX: RC7 --> USB-to-Serial TX
- *   GND: PIC GND --> USB-to-Serial GND
- *
- * Communication Parameters:
- *   Baud Rate: 9600 bps
- *   Data Bits: 8
- *   Stop Bits: 1
- *   Parity: None
- *   Flow Control: None
- *
- * PC Software: Tera Term (recommended), PuTTY, Arduino Serial Monitor, or MPLAB Data Visualizer
- *
- * Crystal Frequency: 8 MHz (Internal Oscillator)
- ******************************************************************************/
+#include <xc.h>  // Include device-specific header file for PIC microcontrollers
 
-#include <xc.h>
-#include <pic18f4550.h>
-#include <string.h>
+#define _XTAL_FREQ 48000000  // Define system clock frequency (for delay macros if needed)
 
-// Configuration Bits
-#pragma config FOSC = INTOSCIO_EC   // Internal oscillator
-#pragma config WDTE = OFF           // Watchdog Timer disabled
-#pragma config PWRTE = OFF          // Power-up Timer disabled
-#pragma config BOREN = OFF          // Brown-out Reset disabled
-#pragma config PBADEN = OFF         // PORTB pins as digital I/O
-#pragma config LVP = OFF            // Low-Voltage Programming disabled
-#pragma config MCLRE = OFF          // MCLR function disabled
+/**
+ * Function to transmit a single byte via UART
+ */
+void Txbyte(char data) {
+    while(TXSTAbits.TRMT == 0);  // Wait until the transmit shift register is empty
+    TXREG = data;                // Load the data byte into the transmit register
+}
 
-// UART Configuration Constants
-#define BAUD_RATE       9600
-#define FOSC            8000000L    // 8 MHz internal oscillator
-#define SPBRG_VALUE     ((FOSC/(16L*BAUD_RATE))-1)  // Baud rate calculation
-
-// Buffer for received data
-#define BUFFER_SIZE     64
-volatile char rx_buffer[BUFFER_SIZE];
-volatile unsigned char rx_index = 0;
-volatile unsigned char data_received = 0;
-
-/******************************************************************************
- * Function: delay_ms
- * Description: Software delay in milliseconds
- * Parameters: ms - delay duration
- * Returns: None
- ******************************************************************************/
-void delay_ms(unsigned int ms) {
-    unsigned int i, j;
-    for(i = 0; i < ms; i++) {
-        for(j = 0; j < 200; j++);
+void main(void) {
+    unsigned char i = 0;
+    
+    // Strings to send via UART
+    const char string[] = "\n\r Press any key\n\r";
+    const char string1[] = "\n\r UART Tested \n\r";
+    
+    // -------------- UART Pin Configuration ---------------
+    TRISB = 0x00;  // Set PORTB as output (used for displaying received data)
+    TRISC = 0x80;  // Set RC7 (RX) as input, RC6 (TX) as output
+    
+    // -------------- UART Initialization ------------------
+    TXSTA = 0x20;  // 8-bit transmission, transmitter enabled, asynchronous mode
+    RCSTA = 0x90;  // Serial port enabled, continuous reception, 8-bit reception
+    SPBRG = 0x19;  // Baud rate = 9600 (for 48 MHz clock: SPBRG = (Fosc/(64*Baud))-1)
+    
+    // Send initial message via UART
+    for(i = 0; string[i] != '\0'; i++) {
+        Txbyte(string[i]);
+    }
+    
+    while(1) {
+        // Check if data is received
+        if(RCSTAbits.FERR == 1) {
+            // Framing error occurred, read and discard RCREG
+            i = RCREG;
+        }
+        else if(PIR1bits.RCIF == 1) {
+            // Data received successfully
+            i = RCREG;         // Read received data
+            PORTB = i;         // Display on PORTB
+            Txbyte(i);         // Echo back the received data
+            
+            // Send confirmation message
+            for(i = 0; string1[i] != '\0'; i++) {
+                Txbyte(string1[i]);
+            }
+        }
     }
 }
 
-/******************************************************************************
- * Function: uart_init
- * Description: Initialize UART module for 9600 baud communication
- * Parameters: None
- * Returns: None
- ******************************************************************************/
-void uart_init(void) {
-    // Configure UART pins (RC6=TX, RC7=RX)
-    TRISCbits.TRISC6 = 0;   // TX as output
-    TRISCbits.TRISC7 = 1;   // RX as input
-    
-    // Configure UART Transmit
-    TXSTAbits.TXEN = 1;     // Enable transmit
-    TXSTAbits.SYNC = 0;     // Asynchronous mode
-    TXSTAbits.BRGH = 1;     // High baud rate mode
-    
-    // Configure UART Receive
-    RCSTAbits.SPEN = 1;     // Enable serial port
-    RCSTAbits.CREN = 1;     // Enable continuous receive
-    
-    // Set baud rate (9600 bps)
-    SPBRG = SPBRG_VALUE;    // Load baud rate generator
-    
-    // Configure interrupts for receive
-    PIR1bits.RCIF = 0;      // Clear receive interrupt flag
-    PIE1bits.RCIE = 1;      // Enable receive interrupt
-    INTCONbits.PEIE = 1;    // Enable peripheral interrupts
-    INTCONbits.GIE = 1;     // Enable global interrupts
-}
-
-/******************************************************************************
- * Function: uart_send_byte
- * Description: Transmit a single byte via UART
- * Parameters: data - byte to transmit
- * Returns: None
- ******************************************************************************/
-void uart_send_byte(unsigned char data) {
-    while(!TXSTAbits.TRMT); // Wait until transmit shift register is empty
+// REMOVED OLD VERBOSE FUNCTIONS
     TXREG = data;           // Load data into transmit register
 }
 
