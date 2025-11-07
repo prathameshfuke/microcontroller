@@ -107,3 +107,10 @@ void flash_display() {
  *   8 = 0x7F = 0111 1111 = All LEDs except MSB
  *   F = 0x71 = 0111 0001 = Top 3 LEDs + bottom LED
  ******************************************************************************/
+
+#include <reg52.h>
+
+void main(void) {
+    P2 = 0x3F;  // Display hex number 0x3F (binary pattern) on Port 2 LEDs
+    while(1);
+}
