@@ -27,18 +27,19 @@
 ;   7. Step through program (F11) and verify transfer
 ;******************************************************************************
 
-ORG 0000H
+ORG 0000H           ; Program start address
 
-MOV R2, #10         ; Counter = 10 bytes
-MOV DPTR, #1000H    ; Source address (external RAM)
-MOV R0, #20H        ; Destination address (internal RAM)
+MOV R2, #10         ; Initialize counter R2 with 10 — number of bytes to transfer
+MOV DPTR, #1000H    ; Load DPTR with 1000H — starting address of source data (in external RAM)
+MOV R0, #20H        ; Load R0 with 20H — starting address of destination (in internal RAM)
 
 LOOP:
-    MOVX A, @DPTR   ; Read from source
-    MOV @R0, A      ; Write to destination
-    INC DPTR        ; Next source
-    INC R0          ; Next destination
-    DJNZ R2, LOOP   ; Decrement counter, loop
+    MOVX A, @DPTR   ; Move byte from external memory (at DPTR) into accumulator A
+    MOV @R0, A      ; Store accumulator contents into internal RAM at address pointed by R0
+    INC DPTR        ; Increment DPTR to point to next external memory location
+    INC R0          ; Increment R0 to point to next internal RAM location
+    DJNZ R2, LOOP   ; Decrement R2 and repeat loop until R2 = 0 (10 bytes copied)
 
-SJMP $              ; End
-END
+SJMP $              ; Infinite loop (halts program execution here)
+END                 ; End of program
+
